@@ -6,29 +6,81 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
   <script src="../index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
+  <script src="./loaders/TDSLoader.js"></script>
+  
 </head>
 <style>
   #m {
-    height: 400px;
+    height: 100vh;
     width: 100%;
+  }
+  body {
+    padding: 0;
+    margin: 0;
   }
 </style>
 <body>
   <div id="m"></div>
 </body>
 <script>
+  let activeObj;
+
   const box = new Things({
     container: '#m',
-    model: './jichuang.3ds',
-    axisHelper: 5,
+    background: '#ccc',
+    model: {
+      url: './jichuang.3ds',
+      loader: TDSLoader,
+      position: [-100, 600, 0]
+    },
+    helper: false,
+    // lights: [{
+    //   position: [1000, 1000, 1000]
+    // }],
     boxHelper: 0xff0000,
     arrowHelper: {
-      length: 2
+      length: 5
     },
     gridHelper: {
       divisions: 10,
       size: 10
+    },
+    pointLightHelper: true,
+    camera: {
+      positions: [0, 1000, 100],
+      options:  {
+        fov: 75,
+        near: 0.1,
+        far: 100000
+      }
+    },
+    controls: {
+      autoRotate: false
+    },
+    interactive: {
+      hex: 0xffff00,
+      resetBefore: false,
+      resetWhenNonIntersects: false,
+      resetBeforeWhenHasIntersects: true,
+      onInteractive: (context, intersects) => {
+        context.currentInteractiveObj = intersects[0].object;
+        context.currentInteractiveObj.currentHex = context.currentInteractiveObj.material.emissive.getHex();
+        context.currentInteractiveObj.material.emissive.setHex(context.options.activeHex || 0xffff00);
+        activeObj = intersects[0];
+        updateInfoPanel(intersects[0]);
+      }
     }
   });
+
+  const updateInfoPanel = (mesh) => {
+    console.log(mesh, 'mesh');
+      console.log(mesh.object.name, 'mesh.object.uuid')
+    switch(mesh.object.uuid) {
+      case '_4':
+        consol.log('panel')
+        break;
+    }
+  }
 </script>
 </html>

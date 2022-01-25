@@ -1,3 +1,8 @@
 node_modules
 
 /lib
+
+*.3ds
+*.bin
+*.gltf
+*.obj

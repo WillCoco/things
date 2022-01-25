@@ -3,10 +3,12 @@ import serve from 'rollup-plugin-serve';
 import commonjs from 'rollup-plugin-commonjs';
 import resolve from 'rollup-plugin-node-resolve';
 import ts from "rollup-plugin-ts";
+import sourcemaps from 'rollup-plugin-sourcemaps';
 
 export default {
     input: 'src/index.ts',
     output: {
+      sourcemap: true,
       file: 'lib/index.js',
       format: 'es'
     },
@@ -15,6 +17,7 @@ export default {
       resolve(),
       commonjs(),
       livereload(),
+      sourcemaps(),
       serve({
         open: true,
         port: 8082,
