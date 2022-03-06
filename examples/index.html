@@ -34,10 +34,7 @@
       loader: TDSLoader,
       position: [-100, 600, 0]
     },
-    helper: false,
-    // lights: [{
-    //   position: [1000, 1000, 1000]
-    // }],
+    helper: true,
     boxHelper: 0xff0000,
     arrowHelper: {
       length: 5
@@ -49,11 +46,7 @@
     pointLightHelper: true,
     camera: {
       positions: [0, 1000, 100],
-      options:  {
-        fov: 75,
-        near: 0.1,
-        far: 100000
-      }
+      params:  [75, 0.1, 100000]
     },
     controls: {
       autoRotate: false

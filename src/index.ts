@@ -16,17 +16,13 @@ const DEFAULT_OPTIONS = {
   helper: false, // helper是所有辅助的总开关
   lights: [{
     type: THREE.PointLight,
-    hex: 0xffffff,
-    // hex: 0xff0000,
-    intensity: 1,
+    params: [0xffffff, 1],
     positions: [500, 600, 400]
-  }/* ,
+  },
   {
     type: THREE.AmbientLight,
-    hex: 0xffffff,
-    // hex: 0xff0000,
-    intensity: 1,
-  } */],
+    params: [0x404040],
+  }],
   controls: {
     interruptAutoRotate: false, // 是否被鼠标移动时间打断
     resumeDuration: 5000, // 打断后恢复时间
@@ -41,11 +37,13 @@ const DEFAULT_OPTIONS = {
   camera: {
     positions: [500, 600, 400],
     Camera: THREE.PerspectiveCamera,
-    options:  {
-      fov: 75,
-      near: 0.1,
-      far: 1000
-    }
+    params:  [75, 0.1, 1000],
+    // {
+    //   fov: 75,
+    //   near: 0.1,
+    //   far: 1000
+    // },
+    customCamera: undefined,
     // position: [5, 5, 10],
     // Camera: THREE.OrthographicCamera,
     // options:  {
@@ -115,7 +113,7 @@ class ThingsBox {
 
   // init
   init() {
-    const {camera, controls} = this.finalOptions;
+    const {controls} = this.finalOptions;
 
     this.containerDom = document.querySelector(this.container);
     if (!this.containerDom) throw new Error('请指定container');
@@ -125,23 +123,13 @@ class ThingsBox {
     this.scene = new THREE.Scene(); // 创建场景
     this.scene.background = new THREE.Color(this.finalOptions.background); // 设置场景背景
 
-    // TODO: 适配各种相机
-    this.camera = new camera.Camera(camera.options.fov, this.containerWidth/this.containerHeight, camera.options.near, camera.options.far);
-    // this.camera = new THREE.OrthographicCamera(
-    //   this.containerWidth / -2,
-    //   this.containerWidth / 2,
-    //   this.containerHeight / -2,
-    //   this.containerHeight / 2,
-    //   1,
-    //   100
-    // );
-    this.camera.position.set(...(camera.positions as XYZ));
-    this.camera.lookAt(0, 0, 0);
-
     this.renderer = new THREE.WebGLRenderer({antialias:true, alpha: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(this.containerWidth, this.containerHeight);
     this.containerDom.appendChild(this.renderer.domElement);
+
+    // 添加相机
+    this.addCamera();
 
     // 添加光源
     this.addLights();
@@ -215,16 +203,51 @@ class ThingsBox {
     this.render();
   }
 
+  addCamera() {
+    const {camera} = this.finalOptions;
+    // xxx new 构造函数的扩展运算符
+    function produceCamera (...rest) {
+      return new camera.Camera(rest[0], rest[1], rest[2], rest[3], rest[4], rest[5], rest[6], rest[7], rest[8], rest[9]);
+    }
+    const newCamera = produceCamera.apply(this, camera.params);
+    this.camera = camera.customCamera || newCamera;
+
+    console.log(camera.params, 122345)
+    console.log(this.camera, 'this.camera')
+    // this.camera = new THREE.OrthographicCamera(
+    //   this.containerWidth / -2,
+    //   this.containerWidth / 2,
+    //   this.containerHeight / -2,
+    //   this.containerHeight / 2,
+    //   1,
+    //   100
+    // );
+    this.camera.position.set(...(camera.positions as XYZ));
+    this.camera.lookAt(0, 0, 0);
+  }
+
   addLights() {
     const {lights} = this.finalOptions;
-    this.lights = lights.map((light) => {
-      const l = new light.type(light.hex || 0xffffff, light.intensity);
-      if (light.positions) {
-        l.position.set(...light.positions)
-      }
-      this.scene.add(l);
-      return l;
-    })
+      this.lights = lights.map((light) => {
+        const lightParams = light?.params || [];
+
+        console.log(lightParams, 'lightParams')
+
+        // xxx new 构造函数的扩展运算符
+        function produceLight(...rest) {
+          return new light.type(rest[0], rest[1], rest[2], rest[3], rest[4], rest[5], rest[6], rest[7], rest[8], rest[9])
+        }
+        const l = produceLight.apply(this, lightParams);
+
+        console.log(l, 12222)
+        if (light.positions) {
+          l.position.set(...light.positions)
+        }
+        this.scene.add(l);
+
+        console.log(this, 111)
+        return l;
+      })
   }
 
   render() {
@@ -232,6 +255,7 @@ class ThingsBox {
   }
 
   helper() {
+    console.log(this.finalOptions.helper, 'this.finalOptions.helper')
     if (this.finalOptions.helper) {
       this.finalOptions.arrowHelper = this.finalOptions.arrowHelper || true;
       this.finalOptions.gridHelper = this.finalOptions.gridHelper || true;
@@ -288,20 +312,20 @@ class ThingsBox {
     //   this.scene.add(box);
     // }
 
-    var light = new THREE.AmbientLight( 0x404040 ); // soft white light
-    this.scene.add( light );
+    // var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+    // this.scene.add( light );
 
-    if (this.finalOptions.pointLightHelper) {
-      this.lights.forEach((light) => {
-        const isPointerLight = light instanceof THREE.PointLight;
-        if (isPointerLight) {
-          const sphereSize = this.finalOptions.pointLightHelper.sphereSize || 10;
-          const hex = this.finalOptions.pointLightHelper.hex || 0xff0000;
-          const pointLightHelper = new THREE.PointLightHelper(light, sphereSize, hex);
-          this.scene.add(pointLightHelper);
-        }
-      })
-    }
+    // if (this.finalOptions.pointLightHelper) {
+    //   this.lights.forEach((light) => {
+    //     const isPointerLight = light instanceof THREE.PointLight;
+    //     if (isPointerLight) {
+    //       const sphereSize = this.finalOptions.pointLightHelper.sphereSize || 10;
+    //       const hex = this.finalOptions.pointLightHelper.hex || 0xff0000;
+    //       const pointLightHelper = new THREE.PointLightHelper(light, sphereSize, hex);
+    //       this.scene.add(pointLightHelper);
+    //     }
+    //   })
+    // }
   }
 
   statistics() {
