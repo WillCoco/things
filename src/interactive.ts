@@ -73,7 +73,6 @@ class Interactive {
     context.currentInteractiveObj = intersects[0].object;
     context.currentInteractiveObj.currentHex = context.currentInteractiveObj.material.emissive.getHex();
     context.currentInteractiveObj.material.emissive.setHex(context.options.activeHex || 0xff0000);
-    console.log(intersects, 'intersects')
   }
 }
 

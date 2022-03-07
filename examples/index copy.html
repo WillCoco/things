@@ -52,8 +52,21 @@
       params:  [75, containerWidth/containerHeight, 0.1, 100000]
     },
     controls: {
-      // autoRotate: false
+      autoRotate: false
     },
+    interactive: {
+      hex: 0xffff00,
+      resetBefore: false,
+      resetWhenNonIntersects: false,
+      resetBeforeWhenHasIntersects: true,
+      onInteractive: (context, intersects) => {
+        context.currentInteractiveObj = intersects[0].object;
+        context.currentInteractiveObj.currentHex = context.currentInteractiveObj.material.emissive.getHex();
+        context.currentInteractiveObj.material.emissive.setHex(context.options.activeHex || 0xffff00);
+        activeObj = intersects[0];
+        updateInfoPanel(intersects[0]);
+      }
+    }
   });
 
   const updateInfoPanel = (mesh) => {

@@ -7,64 +7,6 @@ import Statistics from './statistics';
 
 type XYZ = [number, number, number];
 
-const DEFAULT_OPTIONS = {
-  background: 'rgb(255, 255, 255)',
-  box3Helper: false,
-  arrowHelper: false,
-  gridHelper: false,
-  pointLightHelper: false,
-  helper: false, // helper是所有辅助的总开关
-  lights: [{
-    type: THREE.PointLight,
-    params: [0xffffff, 1],
-    positions: [500, 600, 400]
-  },
-  {
-    type: THREE.AmbientLight,
-    params: [0x404040],
-  }],
-  controls: {
-    interruptAutoRotate: false, // 是否被鼠标移动时间打断
-    resumeDuration: 5000, // 打断后恢复时间
-    options: {
-      enableDamping: true, // an animation loop is required when either damping or auto-rotation are enabled
-      dampingFactor: 0.05,
-      screenSpacePanning: false,
-      minDistance: 0,
-      maxDistance: 1000
-    }
-  },
-  camera: {
-    positions: [500, 600, 400],
-    Camera: THREE.PerspectiveCamera,
-    params:  [75, 0.1, 1000],
-    // {
-    //   fov: 75,
-    //   near: 0.1,
-    //   far: 1000
-    // },
-    customCamera: undefined,
-    // position: [5, 5, 10],
-    // Camera: THREE.OrthographicCamera,
-    // options:  {
-    //   fov: 75,
-    //   near: 0.1,
-    //   far: 1000
-    // }
-  },
-  model: {
-    url: '',
-    position: [0, 0, 0],
-    loader: GLTFLoader
-  },
-  interactive: {
-    event: 'click', // 交互出发事件
-    resetBefore: true, // 在交互效果产生之前，是否清除之前产生的效果
-    resetWhenNonIntersects: true, // 交互触发时无相交obj，是否清除
-    resetBeforeWhenHasIntersects: true, // 在某个obj上交互触发时， 如有上个交互效果，是否清除
-    onInteractive: false,  // 自定义交互逻辑
-  }
-}
 
 /* 初始化配置 */
 class ThingsBox {
@@ -94,19 +36,76 @@ class ThingsBox {
   autoAnim: boolean; // 是否在进行自主动画
 
   lights;
+
+  DEFAULT_OPTIONS
   
   constructor(options) {
+    this.container = options.container;
+    
+    this.containerDom = document.querySelector(this.container);
+    if (!this.containerDom) throw new Error('请指定container');
+    this.containerWidth = this.containerDom.clientWidth;
+    this.containerHeight = this.containerDom.clientHeight;
+
+    this.DEFAULT_OPTIONS = {
+      background: 'rgb(255, 255, 255)',
+      onObjectLoaded: undefined,
+      box3Helper: false,
+      arrowHelper: false,
+      gridHelper: false,
+      pointLightHelper: false,
+      helper: false, // helper是所有辅助的总开关
+      lights: [{
+        type: THREE.PointLight,
+        params: [0xffffff, 1],
+        positions: [500, 600, 400]
+      },
+      {
+        type: THREE.AmbientLight,
+        params: [0x404040],
+      }],
+      controls: {
+        autoRotate: true,
+        interruptAutoRotate: true, // 是否被鼠标移动时间打断
+        resumeDuration: 5000, // 打断后恢复时间
+        options: {
+          enableDamping: true, // an animation loop is required when either damping or auto-rotation are enabled
+          dampingFactor: 0.05,
+          screenSpacePanning: false,
+          minDistance: 0,
+          maxDistance: 1000
+        }
+      },
+      camera: {
+        positions: [500, 600, 400],
+        Camera: THREE.PerspectiveCamera,
+        params:  [75, 0.1, 1000],
+        customCamera: undefined,
+      },
+      model: {
+        url: '',
+        position: [0, 0, 0],
+        loader: GLTFLoader
+      },
+      interactive: {
+        event: 'click', // 交互出发事件
+        resetBefore: true, // 在交互效果产生之前，是否清除之前产生的效果
+        resetWhenNonIntersects: true, // 交互触发时无相交obj，是否清除
+        resetBeforeWhenHasIntersects: true, // 在某个obj上交互触发时， 如有上个交互效果，是否清除
+        onInteractive: false,  // 自定义交互逻辑
+      }
+    }
+
     const finalOptions = {
-      ...DEFAULT_OPTIONS, ...options,
-      camera: {...DEFAULT_OPTIONS.camera, ...options.camera||{}},
-      controls: {...DEFAULT_OPTIONS.controls, ...options.controls||{}},
-      model: {...DEFAULT_OPTIONS.model, ...options.model||{}},
-      interactive: {...DEFAULT_OPTIONS.interactive, ...options.interactive||{}},
-      lights: [...DEFAULT_OPTIONS.lights, ...options.lights||[]],
+      ...this.DEFAULT_OPTIONS, ...options,
+      camera: {...this.DEFAULT_OPTIONS.camera, ...options.camera||{}},
+      controls: {...this.DEFAULT_OPTIONS.controls, ...options.controls||{}},
+      model: {...this.DEFAULT_OPTIONS.model, ...options.model||{}},
+      interactive: {...this.DEFAULT_OPTIONS.interactive, ...options.interactive||{}},
+      lights: [...this.DEFAULT_OPTIONS.lights, ...options.lights||[]],
     };
 
     this.finalOptions = finalOptions;
-    this.container = finalOptions.container;
 
     this.init();
   }
@@ -114,11 +113,6 @@ class ThingsBox {
   // init
   init() {
     const {controls} = this.finalOptions;
-
-    this.containerDom = document.querySelector(this.container);
-    if (!this.containerDom) throw new Error('请指定container');
-    this.containerWidth = this.containerDom.clientWidth;
-    this.containerHeight = this.containerDom.clientHeight;
 
     this.scene = new THREE.Scene(); // 创建场景
     this.scene.background = new THREE.Color(this.finalOptions.background); // 设置场景背景
@@ -162,33 +156,38 @@ class ThingsBox {
 
   load() {
     const loader = new this.finalOptions.model.loader;
-    console.log(loader, 'loader')
     return new Promise((resolve) => {
       loader.load(this.finalOptions.model.url, (o: any) => {
-        const object = o.scene || o;
-        console.log(object, '00000');
-        object.position.set(...(this.finalOptions.model.position as XYZ));
 
-        // object.traverse( function(child) {
-        //   if (child instanceof THREE.Mesh) {
+        let finalObj;
 
-        //     // apply custom material
-        //     child.material.side = (THREE.DoubleSide);
+        if (this.finalOptions.onObjectLoaded) {
+          finalObj = this.finalOptions.onObjectLoaded()
+        } else {
+          finalObj = o.scene || o;
+          finalObj.position.set(...(this.finalOptions.model.position as XYZ));
 
-        //     // enable casting shadows
-        //     child.castShadow = true;
-        //     child.receiveShadow = true;
-        //     }
-        // });
-        object.traverse(function (child) {
-          if (child.isMesh) {
-            child.frustumCulled = false;
-          }
-        });
+          // finalObj.traverse( function(child) {
+          //   if (child instanceof THREE.Mesh) {
 
-        this.scene.add(object);
+          //     // apply custom material
+          //     child.material.side = (THREE.DoubleSide);
+
+          //     // enable casting shadows
+          //     child.castShadow = true;
+          //     child.receiveShadow = true;
+          //     }
+          // });
+          finalObj.traverse(function (child) {
+            if (child.isMesh) {
+              child.frustumCulled = false;
+            }
+          });
+
+          this.scene.add(finalObj);
+        }
         this.render();
-        resolve(object);
+        resolve(finalObj);
       }, undefined, function ( error ) {
         console.error( error );
       });
@@ -212,16 +211,6 @@ class ThingsBox {
     const newCamera = produceCamera.apply(this, camera.params);
     this.camera = camera.customCamera || newCamera;
 
-    console.log(camera.params, 122345)
-    console.log(this.camera, 'this.camera')
-    // this.camera = new THREE.OrthographicCamera(
-    //   this.containerWidth / -2,
-    //   this.containerWidth / 2,
-    //   this.containerHeight / -2,
-    //   this.containerHeight / 2,
-    //   1,
-    //   100
-    // );
     this.camera.position.set(...(camera.positions as XYZ));
     this.camera.lookAt(0, 0, 0);
   }
@@ -231,21 +220,18 @@ class ThingsBox {
       this.lights = lights.map((light) => {
         const lightParams = light?.params || [];
 
-        console.log(lightParams, 'lightParams')
-
         // xxx new 构造函数的扩展运算符
         function produceLight(...rest) {
           return new light.type(rest[0], rest[1], rest[2], rest[3], rest[4], rest[5], rest[6], rest[7], rest[8], rest[9])
         }
+
         const l = produceLight.apply(this, lightParams);
 
-        console.log(l, 12222)
         if (light.positions) {
           l.position.set(...light.positions)
         }
-        this.scene.add(l);
 
-        console.log(this, 111)
+        this.scene.add(l);
         return l;
       })
   }
@@ -255,7 +241,6 @@ class ThingsBox {
   }
 
   helper() {
-    console.log(this.finalOptions.helper, 'this.finalOptions.helper')
     if (this.finalOptions.helper) {
       this.finalOptions.arrowHelper = this.finalOptions.arrowHelper || true;
       this.finalOptions.gridHelper = this.finalOptions.gridHelper || true;
