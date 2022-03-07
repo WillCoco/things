@@ -7,7 +7,13 @@ import Statistics from './statistics';
 
 type XYZ = [number, number, number];
 
+/* 
+  TODO: 
+  1. 右键移动取消
+  2. 动画打断和重置
+  3. 
 
+ */
 /* 初始化配置 */
 class ThingsBox {
 
