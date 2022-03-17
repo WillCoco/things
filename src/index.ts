@@ -1,19 +1,13 @@
 import * as THREE from 'three';
-import { TDSLoader } from 'three/examples/jsm/loaders/TDSLoader';
+// import { TDSLoader } from 'three/examples/jsm/loaders/TDSLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Interactive from './interactive';
 import Statistics from './statistics';
+import throttle from './utils/throttle'
 
 type XYZ = [number, number, number];
 
-/* 
-  TODO: 
-  1. 右键移动取消
-  2. 动画打断和重置
-  3. 
-
- */
 /* 初始化配置 */
 class ThingsBox {
 
@@ -43,7 +37,9 @@ class ThingsBox {
 
   lights;
 
-  DEFAULT_OPTIONS
+  private regainAutoRotateTimer; // 恢复自主动画定时器
+
+  DEFAULT_OPTIONS;
   
   constructor(options) {
     this.container = options.container;
@@ -79,7 +75,8 @@ class ThingsBox {
           dampingFactor: 0.05,
           screenSpacePanning: false,
           minDistance: 0,
-          maxDistance: 1000
+          maxDistance: 1000,
+          enablePan: false
         }
       },
       camera: {
@@ -116,6 +113,7 @@ class ThingsBox {
     this.init();
   }
 
+
   // init
   init() {
     const {controls} = this.finalOptions;
@@ -135,12 +133,7 @@ class ThingsBox {
     this.addLights();
 
     // 轨道控制
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    if (this.finalOptions.controls) {
-      Object.entries(controls).map(([key, value]) => {
-        this.controls[key] = value;
-      })
-    }
+    this.addControls();
 
     // 加载模型
     this.load()
@@ -151,13 +144,18 @@ class ThingsBox {
     // 鼠标在模型上操作的交互
     this.interactive = new Interactive(this, this.finalOptions.interactive);
 
-    this.animate();
 
     // 辅助
     this.helper();
 
     // 统计信息
     this.statistics();
+
+    //
+    this.animate();
+
+    // 自主旋转
+    this.autoRotate();
   }
 
   load() {
@@ -200,12 +198,46 @@ class ThingsBox {
     })
   }
 
-  animate() {
-    requestAnimationFrame(() => this.animate());
-    if (this.finalOptions.controls.autoRotate) {
-      this.controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+  addControls() {
+    const {controls} = this.finalOptions;
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    if (controls?.options) {
+      Object.entries(controls.options).map(([key, value]) => {
+        this.controls[key] = value;
+      })
     }
+    this.controls.autoRotate = controls.autoRotate || controls?.options?.autoRotate;
+  }
+
+  animate() {
+    const {controls} = this.finalOptions;
     this.render();
+    requestAnimationFrame(() => this.animate());
+
+    if (!controls.autoRotate) return;
+
+    this.controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+  }
+
+  autoRotate() {
+    const {camera, controls} = this.finalOptions;
+    // 停止光标移动[resumeDuration]时间后恢复旋转
+    const onMouseOut = ():void => {
+      if (controls.interruptAutoRotate) return;
+      this.controls.autoRotate = false;
+      if (this.regainAutoRotateTimer) {
+        clearTimeout(this.regainAutoRotateTimer)
+      }
+      this.regainAutoRotateTimer = setTimeout(() => {
+        this.controls.autoRotate = true;
+        this.camera.position.set(...(camera.positions as XYZ));
+      }, controls.resumeDuration);
+    }
+
+    this.containerDom.removeEventListener('mousemove', throttle(onMouseOut.bind(this), 100), false)
+    this.containerDom.removeEventListener('mouseout', throttle(onMouseOut.bind(this), 100), false)
+    this.containerDom.addEventListener('mousemove', throttle(onMouseOut.bind(this), 100), false)
+    this.containerDom.addEventListener('mouseout', throttle(onMouseOut.bind(this), 100), false)
   }
 
   addCamera() {
