@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "typing": "typings.d.ts",
   "scripts": {
     "dev": "rollup --config ./rollup.config.js --format umd --name 'Things' -w",
     "build-umd": "rollup --config ./rollup.config.js",

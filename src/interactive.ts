@@ -10,6 +10,7 @@ class Interactive {
   rect;
 
   constructor(context, options) {
+    if (!options) return;
     this.context = context;
     this.options = options;
     this.raycaster = new THREE.Raycaster();

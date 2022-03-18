@@ -14,6 +14,7 @@
   #m {
     height: 100vh;
     width: 100%;
+    border: 10px solid red;
   }
   body {
     padding: 0;
@@ -37,24 +38,15 @@
       loader: TDSLoader,
       position: [-100, 600, 0]
     },
-    helper: true,
-    boxHelper: 0xff0000,
-    arrowHelper: {
-      length: 5
-    },
-    gridHelper: {
-      divisions: 10,
-      size: 10
-    },
-    pointLightHelper: true,
     camera: {
-      positions: [0, 1000, 100],
+      positions: [0, 1000, 1000],
       params:  [75, containerWidth/containerHeight, 0.1, 100000]
     },
     controls: {
       autoRotate: true,
       interruptAutoRotate: false
     },
+    in
   });
 
   const updateInfoPanel = (mesh) => {

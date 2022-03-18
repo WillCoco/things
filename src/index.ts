@@ -5,6 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Interactive from './interactive';
 import Statistics from './statistics';
 import throttle from './utils/throttle'
+import {Options} from './typings';
 
 type XYZ = [number, number, number];
 
@@ -41,7 +42,7 @@ class ThingsBox {
 
   DEFAULT_OPTIONS;
   
-  constructor(options) {
+  constructor(options: Options) {
     this.container = options.container;
     
     this.containerDom = document.querySelector(this.container);
@@ -52,11 +53,6 @@ class ThingsBox {
     this.DEFAULT_OPTIONS = {
       background: 'rgb(255, 255, 255)',
       onObjectLoaded: undefined,
-      box3Helper: false,
-      arrowHelper: false,
-      gridHelper: false,
-      pointLightHelper: false,
-      helper: false, // helper是所有辅助的总开关
       lights: [{
         type: THREE.PointLight,
         params: [0xffffff, 1],
@@ -96,7 +92,13 @@ class ThingsBox {
         resetWhenNonIntersects: true, // 交互触发时无相交obj，是否清除
         resetBeforeWhenHasIntersects: true, // 在某个obj上交互触发时， 如有上个交互效果，是否清除
         onInteractive: false,  // 自定义交互逻辑
-      }
+      },
+      autoResize: true,
+      box3Helper: false,
+      arrowHelper: false,
+      gridHelper: false,
+      pointLightHelper: false,
+      helper: false, // helper是所有辅助的总开关
     }
 
     const finalOptions = {
@@ -104,7 +106,7 @@ class ThingsBox {
       camera: {...this.DEFAULT_OPTIONS.camera, ...options.camera||{}},
       controls: {...this.DEFAULT_OPTIONS.controls, ...options.controls||{}},
       model: {...this.DEFAULT_OPTIONS.model, ...options.model||{}},
-      interactive: {...this.DEFAULT_OPTIONS.interactive, ...options.interactive||{}},
+      interactive: options.interactive === false ? false : {...this.DEFAULT_OPTIONS.interactive, ...options.interactive||{}},
       lights: [...this.DEFAULT_OPTIONS.lights, ...options.lights||[]],
     };
 
@@ -144,7 +146,6 @@ class ThingsBox {
     // 鼠标在模型上操作的交互
     this.interactive = new Interactive(this, this.finalOptions.interactive);
 
-
     // 辅助
     this.helper();
 
@@ -156,6 +157,9 @@ class ThingsBox {
 
     // 自主旋转
     this.autoRotate();
+
+    // 画布自适应
+    this.sizeAdaptive()
   }
 
   load() {
@@ -274,6 +278,17 @@ class ThingsBox {
       })
   }
 
+  sizeAdaptive() {
+    const {autoResize} = this.finalOptions;
+    if (!autoResize) return;
+    const resize = () => {
+      this.containerWidth = this.containerDom.clientWidth;
+      this.containerHeight = this.containerDom.clientHeight;
+      this.renderer.setSize(this.containerWidth, this.containerHeight);
+    }
+    window.addEventListener('resize', resize)
+  }
+
   render() {
     this.renderer.render(this.scene, this.camera);
   }
@@ -315,7 +330,6 @@ class ThingsBox {
       const helper = new THREE.Box3Helper( box3, new THREE.Color(0xffff00) );
       this.scene.add( helper );
     }
-
 
     // 相机视锥体辅助
     // const cameraHelper = new THREE.CameraHelper( this.camera );
