@@ -8,6 +8,7 @@ class Interactive {
   currentInteractiveObj
   mouse;
   rect;
+  listener;
 
   constructor(context, options) {
     if (!options) return;
@@ -18,8 +19,9 @@ class Interactive {
 
     this.rect = context.containerDom.getBoundingClientRect();
 
-    this.render()
-    document.addEventListener(options.event || 'click', (e) => this.onEvent(e), false);
+    this.render();
+    this.listener = this.onEvent.bind(this);
+    this.context.containerDom.addEventListener(options.event || 'click', this.listener, false);
   }
 
   onEvent( event ) {
@@ -74,6 +76,11 @@ class Interactive {
     context.currentInteractiveObj = intersects[0].object;
     context.currentInteractiveObj.currentHex = context.currentInteractiveObj.material.emissive.getHex();
     context.currentInteractiveObj.material.emissive.setHex(context.options.activeHex || 0xff0000);
+  }
+
+  // 销毁
+  destroy() {
+    this.context.containerDom.removeEventListener(this.options.event || 'click', this.listener, false);
   }
 }
 

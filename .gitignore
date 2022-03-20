@@ -2,7 +2,6 @@ node_modules
 
 /lib
 
-*.3ds
+# *.3ds
 *.bin
 *.gltf
-*.obj

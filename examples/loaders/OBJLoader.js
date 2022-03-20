@@ -1,4 +1,4 @@
-( function () {
+( function (self) {
 
 	const _object_pattern = /^[og]\s*(.+)?/; // mtllib file_reference
 
@@ -802,5 +802,6 @@
 	}
 
 	THREE.OBJLoader = OBJLoader;
+	self.OBJLoader = OBJLoader;
 
-} )();
+} )(window);

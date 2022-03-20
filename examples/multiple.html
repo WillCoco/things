@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="../index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
+  <script src="./loaders/TDSLoader.js"></script>
+  <script src="./loaders/OBJLoader.js"></script>
+  
+</head>
+<style>
+  #m {
+    height: 100vh;
+    width: 100%;
+  }
+  body {
+    padding: 0;
+    margin: 0;
+  }
+</style>
+<body>
+  <div id="m"></div>
+</body>
+<script>
+  let activeObj;
+  const containerDom = document.querySelector('#m');
+  const containerWidth = containerDom.clientWidth;
+  const containerHeight = containerDom.clientHeight;
+  // TODO: 切换模型
+  // const box = new Things({
+  //   container: '#m',
+  //   background: '#ccc',
+  //   model: {
+  //     url: './jichuang.3ds',
+  //     loader: TDSLoader,
+  //     position: [-100, 600, 0]
+  //   },
+  //   camera: {
+  //     positions: [0, 1000, 1000],
+  //     params:  [75, containerWidth/containerHeight, 0.1, 100000]
+  //   },
+  //   controls: {
+  //     autoRotate: true,
+  //     interruptAutoRotate: true
+  //   },
+  // });
+
+  // const gun = new Things({
+  //   container: '#m',
+  //   background: '#ccc',
+  //   model: {
+  //     url: './gun.obj',
+  //     loader: OBJLoader,
+  //     position: [0, 0, 0]
+  //   },
+  //   lights: [
+  //     {
+  //       type: THREE.PointLight,
+  //       params: [0xffffff, 1],
+  //       positions: [2, 2, 4]
+  //     },
+  //   ],
+  //   camera: {
+  //     positions: [1, 1, 1],
+  //     params:  [75, containerWidth/containerHeight, 0.1, 100000]
+  //   },
+  //   controls: {
+  //     autoRotate: true,
+  //     interruptAutoRotate: true
+  //   },
+  // });
+
+  
+  // const jiansuxiang = new Things({
+  //   container: '#m',
+  //   background: '#ccc',
+  //   model: {
+  //     url: './jiansuxiang.glb',
+  //     position: [0, 0, 0]
+  //   },
+  //   lights: [
+  //     {
+  //       type: THREE.PointLight,
+  //       params: [0xffffff, 1],
+  //       positions: [2, 2, 4]
+  //     },
+  //   ],
+  //   camera: {
+  //     positions: [5, 5, 5],
+  //     params:  [75, containerWidth/containerHeight, 0.1, 100000]
+  //   },
+  //   controls: {
+  //     autoRotate: true,
+  //     interruptAutoRotate: true
+  //   },
+  //   // interactive: false
+  // });
+
+  
+  const bianyaqi = new Things({
+    container: '#m',
+    background: '#ccc',
+    model: {
+      url: './bianyaqi.glb',
+      position: [0, 0, 0]
+    },
+    lights: [
+      {
+        type: THREE.PointLight,
+        params: [0xffffff, 1],
+        positions: [2, 2, 4]
+      },
+    ],
+    camera: {
+      positions: [5, 5, 5],
+      params:  [75, containerWidth/containerHeight, 0.1, 100000]
+    },
+    controls: {
+      autoRotate: true,
+      interruptAutoRotate: true
+    },
+    interactive: true
+  });
+
+  
+  // setTimeout(() => {
+  //   box.destroy()
+  // }, 5000)
+</script>
+</html>

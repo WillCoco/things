@@ -22,7 +22,7 @@ class ThingsBox {
 
   scene: THREE.Scene;
 
-  finalOptions;
+  private finalOptions;
 
   camera;
 
@@ -38,9 +38,11 @@ class ThingsBox {
 
   lights;
 
+  private throttledMouseEvent; // 恢复自主动画定时器
+
   private regainAutoRotateTimer; // 恢复自主动画定时器
 
-  DEFAULT_OPTIONS;
+  private DEFAULT_OPTIONS;
   
   constructor(options: Options) {
     this.container = options.container;
@@ -106,7 +108,7 @@ class ThingsBox {
       camera: {...this.DEFAULT_OPTIONS.camera, ...options.camera||{}},
       controls: {...this.DEFAULT_OPTIONS.controls, ...options.controls||{}},
       model: {...this.DEFAULT_OPTIONS.model, ...options.model||{}},
-      interactive: options.interactive === false ? false : {...this.DEFAULT_OPTIONS.interactive, ...options.interactive||{}},
+      interactive: options.interactive === true ? this.DEFAULT_OPTIONS.interactive : {...this.DEFAULT_OPTIONS.interactive, ...options.interactive||{}},
       lights: [...this.DEFAULT_OPTIONS.lights, ...options.lights||[]],
     };
 
@@ -114,7 +116,6 @@ class ThingsBox {
 
     this.init();
   }
-
 
   // init
   init() {
@@ -155,11 +156,13 @@ class ThingsBox {
     //
     this.animate();
 
-    // 自主旋转
-    this.autoRotate();
-
     // 画布自适应
-    this.sizeAdaptive()
+    this.sizeAdaptive();
+
+    // 自主旋转
+    this.throttledMouseEvent = throttle(this.onMouseEvent.bind(this), 100);
+
+    this.autoRotate();
   }
 
   load() {
@@ -170,22 +173,11 @@ class ThingsBox {
         let finalObj;
 
         if (this.finalOptions.onObjectLoaded) {
-          finalObj = this.finalOptions.onObjectLoaded()
+          finalObj = this.finalOptions.onObjectLoaded(this, o);
         } else {
           finalObj = o.scene || o;
           finalObj.position.set(...(this.finalOptions.model.position as XYZ));
-
-          // finalObj.traverse( function(child) {
-          //   if (child instanceof THREE.Mesh) {
-
-          //     // apply custom material
-          //     child.material.side = (THREE.DoubleSide);
-
-          //     // enable casting shadows
-          //     child.castShadow = true;
-          //     child.receiveShadow = true;
-          //     }
-          // });
+    
           finalObj.traverse(function (child) {
             if (child.isMesh) {
               child.frustumCulled = false;
@@ -223,25 +215,27 @@ class ThingsBox {
     this.controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
   }
 
-  autoRotate() {
+  // 停止光标移动[resumeDuration]时间后恢复旋转
+  onMouseEvent():void {
     const {camera, controls} = this.finalOptions;
-    // 停止光标移动[resumeDuration]时间后恢复旋转
-    const onMouseOut = ():void => {
-      if (controls.interruptAutoRotate) return;
-      this.controls.autoRotate = false;
-      if (this.regainAutoRotateTimer) {
-        clearTimeout(this.regainAutoRotateTimer)
-      }
-      this.regainAutoRotateTimer = setTimeout(() => {
-        this.controls.autoRotate = true;
-        this.camera.position.set(...(camera.positions as XYZ));
-      }, controls.resumeDuration);
+    if (!controls.interruptAutoRotate) return;
+    this.controls.autoRotate = false;
+    if (this.regainAutoRotateTimer) {
+      clearTimeout(this.regainAutoRotateTimer)
     }
+    this.regainAutoRotateTimer = setTimeout(() => {
+      this.camera.position.set(...(camera.positions as XYZ));
+      this.controls.update();
+      this.controls.autoRotate = true;
+    }, controls.resumeDuration);
+  }
 
-    this.containerDom.removeEventListener('mousemove', throttle(onMouseOut.bind(this), 100), false)
-    this.containerDom.removeEventListener('mouseout', throttle(onMouseOut.bind(this), 100), false)
-    this.containerDom.addEventListener('mousemove', throttle(onMouseOut.bind(this), 100), false)
-    this.containerDom.addEventListener('mouseout', throttle(onMouseOut.bind(this), 100), false)
+
+  autoRotate() {
+    this.containerDom.removeEventListener('mousemove', this.throttledMouseEvent, false)
+    this.containerDom.removeEventListener('mouseout', this.throttledMouseEvent, false)
+    this.containerDom.addEventListener('mousemove', this.throttledMouseEvent, false)
+    this.containerDom.addEventListener('mouseout', this.throttledMouseEvent, false)
   }
 
   addCamera() {
@@ -284,6 +278,8 @@ class ThingsBox {
     const resize = () => {
       this.containerWidth = this.containerDom.clientWidth;
       this.containerHeight = this.containerDom.clientHeight;
+      this.camera.aspect = this.containerWidth / this.containerHeight;
+      this.camera.updateProjectionMatrix();
       this.renderer.setSize(this.containerWidth, this.containerHeight);
     }
     window.addEventListener('resize', resize)
@@ -291,6 +287,23 @@ class ThingsBox {
 
   render() {
     this.renderer.render(this.scene, this.camera);
+  }
+
+  // 销毁
+  destroy() {
+    // 释放three下对象内存
+    try {
+      this.controls.dispose();
+      this.scene.children.forEach((item: any) => item?.dispose?.());
+      this.scene.children.forEach((v) => this.scene.remove(v));
+    } catch (error) {
+      console.log(error)
+    }
+
+    // 移除监听事件
+    this.containerDom.removeEventListener('mousemove', this.throttledMouseEvent, false);
+    this.containerDom.removeEventListener('mouseout', this.throttledMouseEvent, false);
+    this.interactive.destroy();
   }
 
   helper() {

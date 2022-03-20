@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="../index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
+  <script src="./loaders/TDSLoader.js"></script>
+  
+</head>
+<style>
+  #m {
+    height: 100vh;
+    width: 100%;
+  }
+  body {
+    padding: 0;
+    margin: 0;
+    position: relative;
+    background-color: #ccc;
+  }
+
+  #info {
+    display: inline-block;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 300px;
+    height: 300px;
+    padding: 12px;
+    background-color: teal;
+    color: rgba(255,255,255, 0.85)
+  }
+
+  #info > p:last-child {
+    font-size: 14px;
+  }
+
+  #info::before {
+    content: "";
+    display: block;
+    width: 0px;
+    height: 0px;
+    border-top: 20px solid #006767;
+    border-left: 20px solid #006767;
+    border-right: 20px solid #ccc;
+    border-bottom: 20px solid #ccc;
+    bottom: 0px;
+    right: 0px;
+    position: absolute;
+    filter: drop-shadow(-4px -4px 2px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(-4px -4px 2px rgba(0, 0, 0, 0.5));
+    /* margin-right: 10%; */
+  }
+</style>
+<body>
+  <div id="m"></div>
+  <div id="info">
+    <p class="title">点击部件</p>
+    <p class="desc">点击模型上的部件来获取更多信息</p>
+  </div>
+</body>
+<script>
+  let activeObj;
+  const containerDom = document.querySelector('#m');
+  const containerWidth = containerDom.clientWidth;
+  const containerHeight = containerDom.clientHeight;
+
+  const box = new Things({
+    container: '#m',
+    background: '#ccc',
+    model: {
+      url: './jichuang.3ds',
+      loader: TDSLoader,
+      position: [-100, 600, 0]
+    },
+    camera: {
+      positions: [0, 1000, 1000],
+      params:  [75, containerWidth/containerHeight, 0.1, 100000]
+    },
+    controls: {
+      autoRotate: true,
+      interruptAutoRotate: true
+    },
+    interactive: {
+      onInteractive
+    }
+  });
+
+  const infoMap = {};
+
+  Array.from(Array(20)).forEach((_, index) => {
+    infoMap['__'+index] = {title: '部件'+index, description: '这是整个设备的重要组成部分“部件X”，他的主要作用是...'}
+    infoMap['___'+index] = {title: '部件'+index, description: '这是整个设备的重要组成部分“部件X”，他的主要作用是...'}
+    infoMap['____'+index] = {title: '部件'+index, description: '这是整个设备的重要组成部分“部件X”，他的主要作用是...'}
+  });
+
+  function onInteractive(context, intersects) {
+    const currentPart = intersects[0].object; // 当前点击的部件
+    // 默认的部件变色
+    context.currentInteractiveObj = currentPart;
+    context.currentInteractiveObj.currentHex = context.currentInteractiveObj.material.emissive.getHex();
+    context.currentInteractiveObj.material.emissive.setHex(0x023535);
+
+    // 显示部件信息
+    const info = infoMap[currentPart.name];
+    updatePanel(info, currentPart);
+  }
+
+  function updatePanel(info, originInfo) {
+    const titleDom = document.querySelector('#info > .title');
+    const descDom = document.querySelector('#info > .desc');
+    if (info) {
+      titleDom.innerHTML = info.title;
+      descDom.innerHTML = '部件名称：' + originInfo.name + '<br />' + '部件uuid：' + originInfo.uuid + '<br />' + info.description;
+    } else {
+      titleDom.innerHTML = '未知部件';
+      descDom.innerHTML = '为给该部件添加描述。请添加...';
+    }
+  }
+</script>
+</html>
