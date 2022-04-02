@@ -4,8 +4,11 @@ import commonjs from 'rollup-plugin-commonjs';
 import resolve from 'rollup-plugin-node-resolve';
 import ts from "rollup-plugin-ts";
 import sourcemaps from 'rollup-plugin-sourcemaps';
+import dts from 'rollup-plugin-dts';
+import pkg from './package.json';
 
-export default {
+export default[
+  {
     input: 'src/index.ts',
     output: {
       sourcemap: true,
@@ -24,4 +27,13 @@ export default {
         contentBase: ['examples', 'lib'],
       })
     ]
-}
+  },
+  {
+    input: 'src/index.ts',
+    output: {
+      file: pkg.typings,
+      format: 'es'
+    },
+    plugins: [dts()]
+  }
+]

@@ -80,7 +80,9 @@ class Interactive {
 
   // 销毁
   destroy() {
-    this.context.containerDom.removeEventListener(this.options.event || 'click', this.listener, false);
+    if (this.context && this.context.containerDom) {
+      this.context.containerDom.removeEventListener(this.options.event || 'click', this.listener, false);
+    }
   }
 }
 

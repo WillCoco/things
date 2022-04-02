@@ -5,12 +5,14 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Interactive from './interactive';
 import Statistics from './statistics';
 import throttle from './utils/throttle'
-import {Options} from './typings';
+import * as Types from './typings';
 
 type XYZ = [number, number, number];
 
 /* 初始化配置 */
 class ThingsBox {
+
+  static Types = Types;
 
   container;
 
@@ -44,7 +46,7 @@ class ThingsBox {
 
   private DEFAULT_OPTIONS;
   
-  constructor(options: Options) {
+  constructor(options: Types.Options) {
     this.container = options.container;
     
     this.containerDom = document.querySelector(this.container);
@@ -80,7 +82,7 @@ class ThingsBox {
       camera: {
         positions: [500, 600, 400],
         Camera: THREE.PerspectiveCamera,
-        params:  [75, 0.1, 1000],
+        params: [75, this.containerWidth/this.containerHeight, 0.1, 100000],
         customCamera: undefined,
       },
       model: {
@@ -108,8 +110,10 @@ class ThingsBox {
       camera: {...this.DEFAULT_OPTIONS.camera, ...options.camera||{}},
       controls: {...this.DEFAULT_OPTIONS.controls, ...options.controls||{}},
       model: {...this.DEFAULT_OPTIONS.model, ...options.model||{}},
-      interactive: options.interactive === true ? this.DEFAULT_OPTIONS.interactive : {...this.DEFAULT_OPTIONS.interactive, ...options.interactive||{}},
-      lights: [...this.DEFAULT_OPTIONS.lights, ...options.lights||[]],
+      interactive: options.interactive === true ?
+        this.DEFAULT_OPTIONS.interactive :
+          !!options.interactive ? {...this.DEFAULT_OPTIONS.interactive, ...options.interactive||{}} : false,
+      lights: options.lights || this.DEFAULT_OPTIONS.lights || [],
     };
 
     this.finalOptions = finalOptions;
@@ -296,14 +300,22 @@ class ThingsBox {
       this.controls.dispose();
       this.scene.children.forEach((item: any) => item?.dispose?.());
       this.scene.children.forEach((v) => this.scene.remove(v));
+
+      // 移除监听事件
+      this.containerDom.removeEventListener('mousemove', this.throttledMouseEvent, false);
+      this.containerDom.removeEventListener('mouseout', this.throttledMouseEvent, false);
+      this.interactive.destroy();
+
+      // 清除定时器
+      if (this.regainAutoRotateTimer) {
+        clearTimeout(this.regainAutoRotateTimer);
+      }
+
+      // 清除canvas
+      this.containerDom.removeChild(this.renderer.domElement);
     } catch (error) {
       console.log(error)
     }
-
-    // 移除监听事件
-    this.containerDom.removeEventListener('mousemove', this.throttledMouseEvent, false);
-    this.containerDom.removeEventListener('mouseout', this.throttledMouseEvent, false);
-    this.interactive.destroy();
   }
 
   helper() {

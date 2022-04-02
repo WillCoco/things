@@ -1,24 +1,29 @@
 {
-  "name": "things",
-  "version": "1.0.0",
+  "name": "@gyzn/pc-things-show-stand",
+  "version": "0.1.7",
   "description": "",
-  "main": "index.js",
-  "typing": "typings.d.ts",
+  "main": "lib/index.js",
+  "typings": "typings.d.ts",
   "scripts": {
     "dev": "rollup --config ./rollup.config.js --format umd --name 'Things' -w",
+    "build": "rollup --config ./rollup.config.js",
     "build-umd": "rollup --config ./rollup.config.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "kexu9",
   "license": "ISC",
   "dependencies": {
-    "three": "^0.136.0"
+  },
+  "peerDependencies": {
+    "three": "^0.136.0",
+    "@types/three": "^0.136.1"
   },
   "devDependencies": {
     "@types/node": "^17.0.10",
     "@types/three": "^0.136.1",
     "rollup": "^2.66.0",
     "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-dts": "^4.2.0",
     "rollup-plugin-livereload": "^2.0.5",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-serve": "^1.1.0",

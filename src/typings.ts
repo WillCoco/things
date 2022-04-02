@@ -12,7 +12,7 @@ export type Options = {
   container: string; // 容器
   model: {
     url: string; // 3d模型url
-    position: XYZ;
+    position?: XYZ;
     loader?: typeof THREE.Loader;
   },
   background?: string; // 背景色
@@ -30,7 +30,7 @@ export type Options = {
     params?: any[]; // camera.Camera的构造参数
     customCamera?: THREE.Camera; // 自定义相机，如有定义会覆盖camera.Camera
   },
-  interactive?: {
+  interactive?: boolean|{
     event?: 'move'|'click'|string; // 交互出发事件
     resetBefore?: boolean; // 在交互效果产生之前，是否清除之前产生的效果
     resetWhenNonIntersects?: boolean; // 交互触发时无相交obj，是否清除
