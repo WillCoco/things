@@ -15,7 +15,7 @@ export type Options = {
     position?: XYZ;
     loader?: typeof THREE.Loader;
   },
-  background?: string; // 背景色
+  background?: string|false; // 背景色
   onObjectLoaded?: () => void;
   lights?: light[];
   controls?: {

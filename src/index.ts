@@ -107,6 +107,7 @@ class ThingsBox {
 
     const finalOptions = {
       ...this.DEFAULT_OPTIONS, ...options,
+      background: options.background === false ? options.background : (options.background || this.DEFAULT_OPTIONS.background),
       camera: {...this.DEFAULT_OPTIONS.camera, ...options.camera||{}},
       controls: {...this.DEFAULT_OPTIONS.controls, ...options.controls||{}},
       model: {...this.DEFAULT_OPTIONS.model, ...options.model||{}},
@@ -123,11 +124,12 @@ class ThingsBox {
 
   // init
   init() {
-    const {controls} = this.finalOptions;
+    const {controls, background} = this.finalOptions;
 
     this.scene = new THREE.Scene(); // 创建场景
-    this.scene.background = new THREE.Color(this.finalOptions.background); // 设置场景背景
-
+    if (background) {
+      this.scene.background = new THREE.Color(background); // 设置场景背景
+    }
     this.renderer = new THREE.WebGLRenderer({antialias:true, alpha: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(this.containerWidth, this.containerHeight);

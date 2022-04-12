@@ -12,7 +12,7 @@ declare type Options = {
         position?: XYZ;
         loader?: typeof THREE.Loader;
     };
-    background?: string;
+    background?: string | false;
     onObjectLoaded?: () => void;
     lights?: light[];
     controls?: {
